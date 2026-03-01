@@ -1,0 +1,154 @@
+% Minimal preamble for standalone compilation.
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb}
+
+\begin{document}
+
+%------------------------------------------------------------
+% 1) Background geometry (FRW + curvature)
+%------------------------------------------------------------
+We assume an FRW background with curvature,
+\[
+ds^2 = -dt^2 + a(t)^2\left(\frac{dr^2}{1-k r^2}+r^2 d\Omega^2\right),
+\]
+and define the Hubble rate
+\[
+H \equiv \frac{\dot a}{a}.
+\]
+
+We work with present-day density parameters
+\[
+\Omega_{r0},\ \Omega_{m0},\ \Omega_{k0},\ \Omega_{X0},
+\qquad
+\Omega_{r0}+\Omega_{m0}+\Omega_{k0}+\Omega_{X0}=1,
+\]
+where curvature contributes as
+\[
+\rho_k(a) \propto a^{-2},
+\qquad
+\Omega_k(a)=\frac{\Omega_{k0}a^{-2}}{E(a)^2}.
+\]
+
+Define the dimensionless expansion rate
+\[
+E(a)\equiv \frac{H(a)}{H_0}.
+\]
+
+%------------------------------------------------------------
+% 2) Multi-fluid Friedmann equation
+%------------------------------------------------------------
+Radiation and matter are standard,
+\[
+\rho_r(a)=\rho_{r0}a^{-4},
+\qquad
+\rho_m(a)=\rho_{m0}a^{-3}.
+\]
+
+The Friedmann equation is
+\[
+E(a)^2
+=
+\Omega_{r0}a^{-4}
++\Omega_{m0}a^{-3}
++\Omega_{k0}a^{-2}
++\Omega_X(a),
+\]
+where \(\Omega_X(a)\) is the dark-sector fraction in units of the critical density today.
+
+%------------------------------------------------------------
+% 3) Dark-sector continuity in "Omega-fraction" form
+%------------------------------------------------------------
+Let \(N\equiv \ln a\). A continuity equation for the dark sector can be written as
+\[
+\frac{d\Omega_X}{dN}
+=
+-3\bigl(1+w_X\bigr)\Omega_X
++\Omega_X\frac{d\ln E^2}{dN},
+\]
+which is equivalent to
+\[
+\dot\Omega_X
+=
+H\,\Omega_X\left[-3(1+w_X)-\frac{d\ln H^2}{dN}\right].
+\]
+(Your code implements this in a numerically stable form by explicitly computing
+\(\frac{d\ln H^2}{dN}\) from the evolving mixture.)
+
+%------------------------------------------------------------
+% 4) Emergent dark-sector equation of state from order/rotation state
+%------------------------------------------------------------
+Introduce internal state variables
+\[
+\theta(t) \quad (\text{twist angle}),\qquad
+\omega(t)\equiv \dot\theta(t)\quad (\text{angular rate}),
+\]
+\[
+O(t)\in[0,1]\quad(\text{order parameter}),\qquad
+f_b(t)\quad(\text{feedback state}).
+\]
+
+The dark-sector equation of state is taken as an emergent function of this state,
+\[
+w_X(t) = w_{\rm target} + \Delta w\bigl(O(t), f_b(t)\bigr),
+\]
+with a saturating response (your implementation uses a \(\tanh\) nonlinearity)
+that forces a late-time attractor
+\[
+w_X \to -1 \quad \text{as}\quad O\to 1\ \text{and feedback equilibrates.}
+\]
+
+%------------------------------------------------------------
+% 5) Rotation/twist dynamics (a minimal vorticity-like sector)
+%------------------------------------------------------------
+A minimal damped twist system is
+\[
+\dot\theta=\omega,
+\]
+\[
+\dot\omega = -\gamma_{\rm drag} H \omega - k_O(O)\,\theta - \beta_\theta\,\theta.
+\]
+
+The effective twist stiffness is order-controlled,
+\[
+k_O(O)=k_0 + k_1\,(O-O_\star),
+\qquad
+k_O\ge 0,
+\]
+so order can turn the twist mode from floppy to stiff (or vice versa).
+
+%------------------------------------------------------------
+% 6) Order and feedback dynamics (dark-sector "engine room")
+%------------------------------------------------------------
+Define an activity scalar (one convenient choice is)
+\[
+\mathcal{A}=\frac{\theta^2+\eta_\omega \omega^2}{S_\star},
+\qquad
+\sigma=\tanh(\mathcal{A}),
+\]
+with production and decay
+\[
+\dot O = \lambda_{\rm prod}\,\sigma\,\mathcal{T}(\Omega_X)\,(1-O)
+-\lambda_{\rm decay}(1-\sigma)\,O,
+\]
+where \(\mathcal{T}(\Omega_X)\) is an optional "turn-on" factor (your code can scale
+order production by \(\Omega_X\)).
+
+Feedback evolves toward an equilibrium set by the order state,
+\[
+\dot f_b = -\lambda_{fb}\,(f_b - f_b^\star(O)).
+\]
+
+%------------------------------------------------------------
+% 7) "Publishable hooks": mapping to Bianchi/vorticity/shear language
+%------------------------------------------------------------
+In a Bianchi-type extension, one interprets \(\omega\) as a proxy for vorticity
+and introduces a shear scalar \(\sigma^2\) with an evolution law
+\[
+\dot\sigma + 3H\sigma = \Pi(\text{anisotropic stress}),
+\]
+together with constraints linking vorticity/shear to the generalized Friedmann equation.
+The above sector \((\theta,\omega)\) is designed to be promoted into that language
+without changing the multi-fluid backbone.
+
+
+\end{document}
