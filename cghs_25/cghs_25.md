@@ -19,13 +19,13 @@ There is **no external inflaton field** and no external reheating switch.
 
 Instead, cosmic evolution emerges from the coupled dynamics of two variables:
 
-[
+$$
 G(\lambda) = \ln a
-]
+$$
 
-[
+$$
 S(\lambda) = \text{Hilbert sector order parameter}
-]
+$$
 
 Where:
 
@@ -35,9 +35,9 @@ Where:
 
 The system evolves in a **computational flow parameter**
 
-[
+$$
 \lambda
-]
+$$
 
 which is **not physical time**.
 
@@ -47,14 +47,14 @@ which is **not physical time**.
 
 Expansion is determined by a Friedmann-like constraint:
 
-[
+$$
 E(G,S)^2 =
 \Omega_r e^{-4G}
 +
 \Omega_m e^{-3G}
 +
 \Omega_S(S),u(S)
-]
+$$
 
 Where
 
@@ -67,7 +67,7 @@ Where
 
 The order parameter evolves according to
 
-[
+$$
 \frac{dS}{d\lambda}
 ===================
 
@@ -76,7 +76,7 @@ The order parameter evolves according to
 \text{vacuum potential gradient}
 +
 \text{damping}
-]
+$$
 
 Conceptually:
 
@@ -88,9 +88,9 @@ damping → stabilizes late-time behavior
 
 This produces a **stable attractor branch**
 
-[
+$$
 S_*(G)
-]
+$$
 
 confirmed through the **fixed-point analysis**.
 
@@ -102,15 +102,15 @@ A major conceptual addition during this session was the introduction of **time a
 
 Instead of assuming λ is time, we define:
 
-[
+$$
 J_t = \frac{d\tau}{d\lambda}
-]
+$$
 
 where
 
-[
+$$
 \tau
-]
+$$
 
 is **physical emergent time**.
 
@@ -120,14 +120,13 @@ is **physical emergent time**.
 
 We modeled the clock current as
 
-[
-\frac{dJ_t}{d\lambda}
-=====================
+$$
+\frac{dJ_t}{d\lambda} =
 
-## \beta,u(1-u)
+\beta,u(1-u)
 
 \gamma (J_t - J_\infty)
-]
+$$
 
 Interpretation:
 
@@ -139,15 +138,15 @@ Interpretation:
 
 Physical time is then recovered via
 
-[
+$$
 \tau(\lambda)=\int J_t, d\lambda
-]
+$$
 
 and the observable Hubble rate becomes
 
-[
+$$
 H_{\text{eff}} = \frac{E}{J_t}
-]
+$$
 
 ---
 
@@ -201,9 +200,9 @@ Results:
 
 Solved
 
-[
+$$
 dS/d\lambda=0
-]
+$$
 
 across (G).
 
@@ -418,9 +417,9 @@ cghs25_energy_budget_test.py
 
 Check whether
 
-[
+$$
 Ω_r + Ω_m + Ω_S ≈ 1
-]
+$$
 
 across evolution.
 
