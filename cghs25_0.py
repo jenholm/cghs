@@ -9,8 +9,7 @@ from scipy.integrate import solve_ivp
 Omega_r0 = 9e-5
 Omega_m0 = 0.30
 Omega_L_floor = 0.70
-#Omega_inf = 50.0
-Omega_inf = 1.0
+Omega_inf = 50.0
 
 # Hilbert sector parameters
 S_c = 8.0
@@ -20,14 +19,6 @@ epsilon_tilt = 0.02
 kappa = 60.0
 gamma_S = 0.08
 mu_S = 0.002
-
-# ============================================================
-# Time current parameters
-# ============================================================
-
-beta_t = 0.8
-gamma_t = 1.2
-J_inf = 1.0
 
 EXP_CLIP = 700
 
@@ -52,10 +43,10 @@ def logistic_u(S):
     return 1.0 / (1.0 + np.exp(x))
 
 
-#def f_internal(S):
-#    return 1.0 - logistic_u(S)
 def f_internal(S):
-    return (1.0 - logistic_u(S))**8
+
+    return 1.0 - logistic_u(S)
+
 
 # ============================================================
 # Hilbert vacuum potential
@@ -92,7 +83,8 @@ def E_of(G,S):
 
     rad = Omega_r0 * fS * safe_exp(-4*G)
     mat = Omega_m0 * fS * safe_exp(-3*G)
-    vac = Omega_S(S)
+    #vac = Omega_S(S)
+    vac = Omega_S(S) * logistic_u(S)
 
     rhs = rad + mat + vac
     rhs = np.maximum(rhs,1e-12)
@@ -122,82 +114,24 @@ def dS_dlambda(G,S):
 # Geometry evolution
 # ============================================================
 
-#def dG_dlambda(G,S):
+def dG_dlambda(G,S):
 
-#    return E_of(G,S)
-
-#def dG_dlambda(G,S,J):
-#    return E_of(G,S) / np.maximum(J,1e-12)
-
-def dG_dlambda(G, S):
-    return E_of(G, S)
-
-# def dG_dlambda(G, S, J):
-
-#     E = E_of(G, S)
-
-#     return E / np.maximum(J, 1e-12)
-
-# ============================================================
-# Time current evolution
-# ============================================================
-
-def dJ_dlambda(S,J):
-
-     u = logistic_u(S)
-
-     production = beta_t * u * (1-u)
-
-     relaxation = -gamma_t * (J - J_inf)
-
-     return production + relaxation
-
-
-
+    return E_of(G,S)
 
 
 # ============================================================
 # Coupled system
 # ============================================================
 
-# def system(lam,y):
+def system(lam,y):
 
-#     G,S,J = y
+    G,S = y
 
-#     dG = dG_dlambda(G,S)
-#     dS = dS_dlambda(G,S)
-#     dJ = dJ_dlambda(S,J)
+    return [
+        dG_dlambda(G,S),
+        dS_dlambda(G,S)
+    ]
 
-#     return [dG,dS,dJ]
-
-# def system(lam,y):
-
-#     G,S,J = y
-
-#     dG = dG_dlambda(G,S,J)
-#     dS = dS_dlambda(G,S)
-#     dJ = dJ_dlambda(S,J)
-
-def system(lam, y):
-    G, S, J = y
-
-    dG = dG_dlambda(G, S)
-    dS = dS_dlambda(G, S)
-    dJ = dJ_dlambda(S, J)
-
-    return np.array([dG, dS, dJ])
-
-
-
-# def system(lam, y):
-
-#     G, S, J = y
-
-#     dG = dG_dlambda(G, S, J)
-#     dS = dS_dlambda(G, S)
-#     dJ = dJ_dlambda(S, J)
-
-#     return np.array([dG, dS, dJ])
 
 # ============================================================
 # Integrate model
@@ -207,7 +141,7 @@ lam_span = (0,80)
 
 lam_eval = np.linspace(0,80,1500)
 
-initial_state = [-11.0,0.1,1.0]
+initial_state = [-11.0,0.1]
 
 sol = solve_ivp(
     system,
@@ -219,32 +153,10 @@ sol = solve_ivp(
 
 G = sol.y[0]
 S = sol.y[1]
-J = sol.y[2]
 lam = sol.t
 
 a = safe_exp(G)
 
-# ============================================================
-# Reconstruct physical time
-# ============================================================
-
-tau = np.zeros_like(lam)
-
-for i in range(1,len(lam)):
-
-    dt = lam[i]-lam[i-1]
-
-    tau[i] = tau[i-1] + 0.5*(J[i]+J[i-1])*dt
-
-
-# ============================================================
-# Observable expansion rate
-# ============================================================
-
-E = E_of(G,S)
-
-#H_eff = E / np.maximum(J,1e-12)
-H_eff = E_of(G, S) / J
 
 # ============================================================
 # Diagnostics
@@ -252,46 +164,121 @@ H_eff = E_of(G, S) / J
 
 fig,axs = plt.subplots(3,2,figsize=(12,12))
 
+# ------------------------------------------------
 # Hilbert evolution
+# ------------------------------------------------
 
-axs[0,0].plot(tau,S)
+axs[0,0].plot(lam,S)
 axs[0,0].axhline(S_c,color="red",linestyle=":")
-axs[0,0].set_title("Hilbert order parameter S(τ)")
+axs[0,0].set_title("Hilbert order parameter")
 
-# Geometry
+# ------------------------------------------------
+# Geometry evolution
+# ------------------------------------------------
 
-axs[0,1].plot(tau,G)
-axs[0,1].set_title("Geometry G = ln(a)")
+axs[0,1].plot(lam,G)
+axs[0,1].set_title("Geometry variable G = ln(a)")
 
+# ------------------------------------------------
 # Scale factor
+# ------------------------------------------------
 
-axs[1,0].plot(tau,a)
+axs[1,0].plot(lam,a)
 axs[1,0].set_yscale("log")
-axs[1,0].set_title("Scale factor a(τ)")
+axs[1,0].set_title("Scale factor a")
 
+# ------------------------------------------------
 # Phase portrait
+# ------------------------------------------------
 
 axs[1,1].plot(G,S)
 axs[1,1].axhline(S_c,color="red",linestyle=":")
 axs[1,1].set_title("Phase portrait (G,S)")
 
-# Time current
+# ============================================================
+# Expansion components
+# ============================================================
 
-axs[2,0].plot(tau,J)
-axs[2,0].set_title("Emergent time current J_t")
+rad_term = Omega_r0 * f_internal(S) * safe_exp(-4*G)
+mat_term = Omega_m0 * f_internal(S) * safe_exp(-3*G)
+vac_term = Omega_S(S)
 
-# Hubble rate
+axs[2,0].plot(G, rad_term, label="radiation")
+axs[2,0].plot(G, mat_term, label="matter")
+axs[2,0].plot(G, vac_term, label="Hilbert vacuum")
 
-axs[2,1].plot(tau,H_eff)
-axs[2,1].set_title("Observable expansion H_eff")
+axs[2,0].set_yscale("log")
+axs[2,0].set_title("Expansion components")
+axs[2,0].legend()
 
-plt.tight_layout()
-plt.savefig("cghs25_time_current.png", dpi=300)
-plt.show()
+# ------------------------------------------------
+# Leave last panel empty for now
+# ------------------------------------------------
 
+#axs[2,1].axis("off")
+# ============================================================
+# Cosmology phase portrait flow field
+# ============================================================
+
+# G_grid = np.linspace(np.min(G)-2, np.max(G)+2, 30)
+# S_grid = np.linspace(0, 20, 30)
+
+# GG, SS = np.meshgrid(G_grid, S_grid)
+
+# dG = np.zeros_like(GG)
+# dS = np.zeros_like(SS)
+
+# for i in range(GG.shape[0]):
+#     for j in range(GG.shape[1]):
+
+#         g = GG[i,j]
+#         s = SS[i,j]
+
+#         dG[i,j] = dG_dlambda(g,s)
+#         dS[i,j] = dS_dlambda(g,s)
+
+# axs[2,1].streamplot(
+#     GG, SS,
+#     dG, dS,
+#     density=1.2,
+#     color="gray"
+# )
+
+# axs[2,1].plot(G, S, color="black", linewidth=2)
+
+# axs[2,1].axhline(S_c, color="red", linestyle=":")
+
+# axs[2,1].set_title("Cosmology phase portrait")
+# axs[2,1].set_xlabel("G")
+# axs[2,1].set_ylabel("S")
+
+
+# plt.tight_layout()
+# plt.savefig("cghs25.png", dpi=300)
+# plt.show()
 
 # ============================================================
-# 3D spacetime tube
+# Component fractions
+# ============================================================
+
+E2 = E_of(G, S)**2
+E2_safe = np.where(E2 < 1e-12, 1e-12, E2)
+
+rad_frac = rad_term / E2_safe
+mat_frac = mat_term / E2_safe
+vac_frac = vac_term / E2_safe
+
+axs[2,1].plot(G, rad_frac, label="radiation fraction")
+axs[2,1].plot(G, mat_frac, label="matter fraction")
+axs[2,1].plot(G, vac_frac, label="Hilbert vacuum fraction")
+
+axs[2,1].set_title("Component dominance fractions")
+axs[2,1].set_xlabel("G = ln(a)")
+axs[2,1].set_ylabel("fraction of E²")
+axs[2,1].legend()
+
+# ============================================================
+# 3D Spacetime tube
 # ============================================================
 
 from mpl_toolkits.mplot3d import Axes3D
@@ -303,18 +290,15 @@ ax3 = fig3.add_subplot(111, projection="3d")
 
 theta = np.linspace(0,2*np.pi,80)
 
-TAU,TH = np.meshgrid(tau,theta)
+LAM,TH = np.meshgrid(lam,theta)
 
-a_norm = a/np.max(a)
-
-#radius = a_norm**0.18 + 0.02
-radius = np.log10(a + 1)
-radius = radius / np.max(radius)
-radius = 0.1 + 0.9*radius
+# tube radius proportional to scale factor
+a_norm = a / np.max(a)
+radius = a_norm**0.18 + 0.02
 
 R = np.tile(radius,(len(theta),1))
 
-X = TAU
+X = LAM
 Y = R*np.cos(TH)
 Z = R*np.sin(TH)
 
@@ -333,7 +317,7 @@ ax3.plot_surface(
 )
 
 ax3.plot_wireframe(
-    X,Y,Z,
+    X, Y, Z,
     rstride=6,
     cstride=6,
     color="black",
@@ -341,13 +325,35 @@ ax3.plot_wireframe(
     alpha=0.2
 )
 
-ax3.plot(tau,np.zeros_like(tau),np.zeros_like(tau),color="black")
+# center spine
+ax3.plot(lam,np.zeros_like(lam),np.zeros_like(lam),color="black")
 
-ax3.set_title("Spacetime tube with emergent time")
+# mark Hilbert transition
+cross_idx = np.where(S >= S_c)[0]
 
-ax3.set_xlabel("τ")
+if len(cross_idx)>0:
+    i = cross_idx[0]
+
+    ax3.scatter(
+        lam[i],0,0,
+        color="red",
+        s=80,
+        label=f"S_c = {S_c}"
+    )
+
+ax3.set_title("Spacetime tube from cosmology trajectory")
+
+ax3.set_xlabel("λ")
 ax3.set_ylabel("Y")
 ax3.set_zlabel("Z")
 
-plt.savefig("cghs25_tube_time.png", dpi=300)
+ax3.view_init(elev=18, azim=-120)
+ax3.set_box_aspect((3,1,1))
+# colorbar
+mappable = cm.ScalarMappable(norm=norm, cmap=cm.viridis_r)
+mappable.set_array([])
+
+cbar = plt.colorbar(mappable, ax=ax3, shrink=0.7)
+cbar.set_label("Hilbert order parameter S")
+plt.savefig("cghs25_tube.png", dpi=300)
 plt.show()

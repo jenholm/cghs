@@ -94,20 +94,24 @@ def E_of(G, S):
 # tau    = emergent physical time
 # ============================================================
 
+# def alpha_of(G, S):
+#     """
+#     Positive clock-rate functional.
+
+#     Interpretation:
+#     - low-order Hilbert sector -> slower emergent clock
+#     - activated classical sector -> faster clock
+#     """
+#     fS = f_internal(S)
+#     E = E_of(G, S)
+
+#     alpha = alpha_floor + 0.25 * fS + 0.75 * fS / (1.0 + E)
+#     return np.maximum(alpha, alpha_floor)
+
 def alpha_of(G, S):
-    """
-    Positive clock-rate functional.
-
-    Interpretation:
-    - low-order Hilbert sector -> slower emergent clock
-    - activated classical sector -> faster clock
-    """
     fS = f_internal(S)
-    E = E_of(G, S)
-
-    alpha = alpha_floor + 0.25 * fS + 0.75 * fS / (1.0 + E)
+    alpha = alpha_floor + fS**2
     return np.maximum(alpha, alpha_floor)
-
 
 # ============================================================
 # Dynamics
